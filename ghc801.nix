@@ -5,13 +5,11 @@ haskellPackagesOrig.override (oldArgs: {
   overrides = with haskell.lib; new: old:
   let parent = (oldArgs.overrides or (_: _: {})) new old;
   in parent // {
-      HTTP           =           (doJailbreak old.HTTP);
-      bifunctors     = dontCheck (doJailbreak old.bifunctors);
-      comonad        = dontCheck (doJailbreak old.comonad);
+      # aeson          = (doJailbreak old.aeson);
       aeson          = dontCheck (haskell.lib.overrideCabal old.aeson (oldAttrs: {
         buildDepends = [ new.fail new.tagged ];
-	editedCabalFile = null;
-	revision        = null;
+        editedCabalFile = null;
+        revision        = null;
         src = pkgs.fetchgit {
                 url    = https://github.com/bos/aeson;
                 rev    = "d9f1ad357e5dc28c381099814e7cce0e68cf2b6a";
@@ -20,6 +18,20 @@ haskellPackagesOrig.override (oldArgs: {
       }));
       aeson-utils      = (doJailbreak old.aeson-utils);
       authenticate-oauth = dontCheck (doJailbreak old.authenticate-oauth);
+      bifunctors     = dontCheck (doJailbreak old.bifunctors);
+      # 'conduit' tests go OOM on GHC 8.0.1-rc2
+      conduit        = dontCheck old.conduit;             # XXX: running tests triggers OOM
+      # 'conduit-combinators' tests go OOM on GHC 8.0.1-rc2
+      conduit-combinators =
+                       dontCheck old.conduit-combinators; # XXX: running tests triggers OOM
+      # newer 'comonad' required by new 'pointed'
+      comonad        = dontCheck (haskell.lib.overrideCabal old.comonad (oldAttrs: {
+        src = pkgs.fetchgit {
+                url    = https://github.com/ekmett/comonad.git;
+                rev    = "4ed802746b623a8705d08d90cd57b859d7bc70e2";
+                sha256 = "1n9ggd51iykqz55wn76wpibxrpmxymjkly1swfpab36mfb4lr7s8";
+        };
+      }));
       doctest        = dontCheck (haskell.lib.overrideCabal old.doctest (oldAttrs: {
         buildDepends = [ new.base-compat ];
         src = pkgs.fetchgit {
@@ -29,18 +41,10 @@ haskellPackagesOrig.override (oldArgs: {
         };
       }));
       fail           = dontHaddock (dontCheck (doJailbreak old.fail));
-      generic-aeson  = doJailbreak (haskell.lib.overrideCabal old.generic-aeson (oldAttrs: {
-        src = pkgs.fetchgit {
-                url    = https://github.com/silkapp/generic-aeson/;
-                rev    = "f85e6a805d296a8037d0c21828a9e4185d490910";
-                sha256 = "1c717c05z3nk1q9wgnxg6pxsywjf1d95r4v9509b1b8vvj67gfkv";
-        };
-      }));
+      foldl          = dontHaddock (dontCheck (doJailbreak old.foldl));
+      generic-aeson  = doJailbreak old.generic-aeson;
       haskell-src-exts        = dontCheck (haskell.lib.overrideCabal old.haskell-src-exts (oldAttrs: {
         src = pkgs.fetchgit {
-                # url    = https://github.com/mpickering/haskell-src-exts;
-                # rev    = "49faf5996dec083b8f33fac23de8f56493e93df3";
-                # sha256 = "1fj924hrpys8mngncbh6ql1j9a766xsj4wppfy9484jyi3p00cga";
                 url    = https://github.com/haskell-suite/haskell-src-exts;
                 rev    = "291cc802fda331e7fb69c57be77fc95aac7fb18c";
                 sha256 = "05i4a0nsd4cv8waz5j4d2fr5a6kk23v2qfxc4y7vws1xgq6f71jb";
@@ -53,9 +57,11 @@ haskellPackagesOrig.override (oldArgs: {
                 sha256 = "1a3fl41sr34iz6cnygvngl2f88xxbpn5jhan6rqcxqsda86h6ri8";
         };
       });
+      HTTP           =           (doJailbreak old.HTTP);
       http-date      = (dontCheck old.http-date);
       json-autotype  = (doJailbreak old.json-autotype);
       json-schema    = (doJailbreak old.json-schema);
+      # newer 'kan-extensions' required for newer 'lens'
       kan-extensions = dontCheck (haskell.lib.overrideCabal old.kan-extensions (oldAttrs: {
         src = pkgs.fetchgit {
                 url    = https://github.com/ekmett/kan-extensions.git;
@@ -63,6 +69,7 @@ haskellPackagesOrig.override (oldArgs: {
                 sha256 = "0vd3z37a0bfsgkmisr917gd65g3jix4xpb11xyyyfl3xyac447gl";
         };
       }));
+      # lens 4.13 depends on old doctest
       lens           = dontCheck (haskell.lib.overrideCabal old.lens (oldAttrs: {
         src = pkgs.fetchgit {
                 url    = https://github.com/ekmett/lens.git;
@@ -71,16 +78,27 @@ haskellPackagesOrig.override (oldArgs: {
         };
       }));
       lens-aeson     = dontCheck (doJailbreak old.lens-aeson);
+      # 'linear': doctests & stuff
       linear         = dontCheck (haskell.lib.overrideCabal old.linear (oldAttrs: {
-	editedCabalFile = null;
-	revision        = null;
+        editedCabalFile = null;
+        revision        = null;
         src = pkgs.fetchgit {
                 url    = https://github.com/ekmett/linear.git;
                 rev    = "7de2733b1d922a2717860df49b6090042b81ea35";
                 sha256 = "0c3cw4b9cnypi1rjdyzp5xb0qy088q3mg5in8q5lcvqfmpzfc22b";
         };
       }));
+      managed        = doJailbreak old.managed;
+      monads-tf      = doJailbreak old.monads-tf;
       parsers        = doJailbreak old.parsers;
+      # newer 'pointed' necessitated by newer 'kan-extensions'
+      pointed       = dontCheck (haskell.lib.overrideCabal old.pointed (oldAttrs: {
+        src = pkgs.fetchgit {
+                url    = https://github.com/ekmett/pointed.git;
+                rev    = "7fbe6a2283b64fcc4ae06e8a1c4d8923d45b6fbc";
+                sha256 = "1209b5sc760wcms7qsyyhl3q3dia04j9bps79ksjrk4n6ijn05vy";
+        };
+      }));
       psqueues       = dontCheck (haskell.lib.overrideCabal old.psqueues (oldAttrs: {
         src = pkgs.fetchgit {
                 url    = https://github.com/bttr/psqueues.git;
@@ -90,25 +108,20 @@ haskellPackagesOrig.override (oldArgs: {
       }));
       reducers       = doJailbreak old.reducers;
       resourcet      = doJailbreak old.resourcet;
-      sdl2           = doJailbreak (haskell.lib.overrideCabal old.sdl2 (oldAttrs: {
-        buildDepends = [ new.linear new.text new.vector ];
-        src          = pkgs.fetchgit {
-                url    = https://github.com/haskell-game/sdl2.git;
-                rev    = "02a535bc44ddf1a520b5d0eada648b2801f94a32";
-                sha256 = "1y0prl6gllm8xsidq702n576vfd6xmib4v2kip0afpx6z6mnhgdm";
-        };
-      }));
+      sdl2           = doJailbreak old.sdl2;
       semigroupoids  = dontCheck (doJailbreak old.semigroupoids);
-      th-expand-syns = haskell.lib.overrideCabal old.th-expand-syns (oldAttrs: {
+      stm-conduit    = doJailbreak (dontCheck (haskell.lib.overrideCabal old.stm-conduit (oldAttrs: {
         src          = pkgs.fetchgit {
-                url    = https://github.com/DanielSchuessler/th-expand-syns;
-                rev    = "55fbd67f70b7518e60ebf18cf559c7d1b8f0d5fe";
-                sha256 = "0frzz6f6zmk2p51903cypk8ab8bjwadcc4i60ld743rcc7gm6ixc";
+                url    = https://github.com/deepfire/stm-conduit.git;
+                rev    = "dae89e18161026aca9ab095afca0a3d94dce4b96";
+                sha256 = "0bmym2ps0yjcsbyg02r8v1q8z5hpml99n72hf2pjmd31dy8iz7v9";
         };
-      });
+      })));
+      th-expand-syns = doJailbreak old.th-expand-syns;
       transformers-compat
                      = doJailbreak (old.transformers-compat_0_5_1_4);
       trifecta       = doJailbreak old.trifecta;
+      turtle         = doJailbreak old.turtle;
       optparse-generic = new.callPackage ({ mkDerivation, base, optparse-applicative, system-filepath, text, transformers, void }:
              mkDerivation {
                pname = "optparse-generic";
